@@ -1,0 +1,9 @@
+project_id = "central-de-ideias"
+
+[auth]
+enable_signup = false
+
+[functions.ideias]
+# A função valida o JWT pelo Auth.getUser antes de qualquer acesso.
+# Compatível com as novas chaves publishable e JWTs assimétricos.
+verify_jwt = false

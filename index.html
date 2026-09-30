@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f5f1" />
+    <meta
+      name="description"
+      content="Um espaço pessoal para guardar ideias e transformá-las em prompts."
+    />
+    <title>Central de Ideias</title>
+  </head>
+  <body>
+    <div id="app">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="Central de Ideias"
+          ><span class="brand-icon">✳</span
+          ><span>central<span class="brand-light"> de ideias</span></span></a
+        >
+        <p class="eyebrow">SEU ESPAÇO DE CRIAÇÃO</p>
+        <button class="new-button" id="new-idea">
+          ＋ <span>Nova ideia</span><kbd>N</kbd>
+        </button>
+        <div class="nav-label">
+          ◫ <span>Minhas ideias</span
+          ><span id="idea-count" class="count">0</span>
+        </div>
+        <div class="sidebar-note">
+          <span class="note-star">✧</span>
+          <p>Uma ideia não precisa estar pronta para ser boa.</p>
+          <small>Comece pelo que está na sua cabeça.</small>
+        </div>
+        <div class="account">
+          <span class="avatar">EU</span>
+          <div>
+            <strong>Meu espaço pessoal</strong
+            ><small id="account-email">Acesso privado</small>
+          </div>
+          <button id="logout" class="icon-button" aria-label="Sair" hidden>
+            ↗
+          </button>
+        </div>
+      </aside>
+      <main>
+        <header class="topbar">
+          <span>Seu caderno, com um próximo passo.</span
+          ><span class="private-label">◈ &nbsp; Espaço privado</span>
+        </header>
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow">CAPTURE. ORGANIZE. CRIE.</p>
+            <h1>Dê espaço às suas ideias<span>.</span></h1>
+            <p>
+              Do pensamento solto ao próximo projeto. Uma ideia de cada vez.
+            </p>
+          </div>
+          <span class="heading-art" aria-hidden="true">✳</span>
+        </section>
+        <div id="notice" role="status" aria-live="polite" hidden></div>
+        <section id="setup" class="panel" hidden>
+          <h2>Seu espaço está quase pronto</h2>
+          <p>
+            Configure a URL e a chave pública do Supabase no arquivo
+            <code>.env</code> para entrar e salvar suas ideias.
+          </p>
+          <p>O passo a passo está no README do projeto.</p>
+        </section>
+        <section id="login-panel" class="panel login-panel" hidden>
+          <span class="small-icon">↗</span>
+          <h2>Boas ideias começam aqui.</h2>
+          <p>Entre para acessar seu caderno pessoal.</p>
+          <form id="login-form">
+            <label
+              >E-mail<input
+                id="email"
+                type="email"
+                autocomplete="username"
+                required
+                placeholder="voce@exemplo.com" /></label
+            ><label
+              >Senha<input
+                id="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                minlength="6"
+                placeholder="Sua senha" /></label
+            ><button class="primary" type="submit">
+              Entrar no meu espaço <span>→</span>
+            </button>
+          </form>
+          <small
+            >Acesso exclusivo. O usuário é criado pelo administrador.</small
+          >
+        </section>
+        <section id="workspace" hidden>
+          <div class="history-heading">
+            <h2>Suas ideias <span id="history-count">0</span></h2>
+            <span>Um lugar para não esquecer</span>
+          </div>
+          <div id="history" aria-live="polite"></div>
+          <button id="load-more" class="secondary" hidden>
+            Carregar mais ideias
+          </button>
+          <section class="composer" aria-label="Nova ideia">
+            <div class="composer-title">
+              <span class="small-icon">✧</span
+              ><strong>O que você está pensando?</strong
+              ><span id="draft-kind">NOVA IDEIA</span>
+            </div>
+            <label class="sr-only" for="idea-text">Escreva sua ideia</label
+            ><textarea
+              id="idea-text"
+              maxlength="20000"
+              placeholder="Escreva uma ideia, mesmo que ela ainda esteja pela metade…"
+            ></textarea>
+            <div id="recording-panel" hidden>
+              <span class="record-dot"></span
+              ><strong id="recording-time">00:00</strong
+              ><span>Gravando sua ideia</span
+              ><button id="stop-recording" class="secondary">Parar</button
+              ><button id="cancel-recording" class="text-button">
+                Cancelar
+              </button>
+            </div>
+            <div id="audio-preview" hidden>
+              <audio id="draft-audio" controls></audio
+              ><button id="rerecord" class="text-button">Regravar</button
+              ><button id="discard-audio" class="text-button">Descartar</button>
+            </div>
+            <div class="composer-footer">
+              <button id="record" class="secondary">
+                <span aria-hidden="true">♩</span> Gravar áudio</button
+              ><label class="check-label"
+                ><input type="checkbox" id="generate-prompt" checked />Gerar
+                prompt <span class="ai-chip">IA</span></label
+              ><button id="send" class="primary">
+                Salvar ideia <span>↑</span>
+              </button>
+            </div>
+            <p class="composer-hint">
+              <span id="recording-limit">Áudio de até 5 minutos</span
+              ><span>Suas ideias ficam salvas só para você.</span>
+            </p>
+          </section>
+          <footer>Da sua cabeça para o mundo. <span>✧</span></footer>
+        </section>
+      </main>
+    </div>
+    <dialog id="delete-dialog">
+      <h2>Excluir esta ideia?</h2>
+      <p>
+        O texto, o resumo, o prompt e o áudio original serão removidos. Esta
+        ação não pode ser desfeita.
+      </p>
+      <div class="actions">
+        <button id="cancel-delete" class="secondary">Manter ideia</button
+        ><button id="confirm-delete" class="danger">Excluir ideia</button>
+      </div>
+    </dialog>
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>
