@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: central-de-ideias
+    name: central-pessoal
     runtime: static
     buildCommand: npm ci && npm run build
     staticPublishPath: dist

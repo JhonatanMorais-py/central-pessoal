@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
 const uid = "11111111-1111-4111-8111-111111111111";
-let rows, processCalls, uploads;
+let rows, finances, processCalls, uploads;
 test.beforeEach(async ({ page }) => {
   rows = [];
+  finances = [];
   processCalls = [];
   uploads = [];
   await page.route("https://fonts.googleapis.com/**", (route) => route.abort());
@@ -45,6 +46,29 @@ test.beforeEach(async ({ page }) => {
       if (url.searchParams.get("select") === "status")
         return send({ status: "generating" });
       return send(rows);
+    }
+    if (url.pathname.startsWith("/rest/v1/fin_lancamentos")) {
+      const id = url.searchParams.get("id")?.replace(/^eq\./, "");
+      if (req.method() === "POST") {
+        const input = req.postDataJSON();
+        finances.unshift({
+          id: crypto.randomUUID(),
+          ...input,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        return send(null, 201);
+      }
+      if (req.method() === "PATCH") {
+        const row = finances.find((item) => item.id === id);
+        if (row) Object.assign(row, req.postDataJSON());
+        return send(null);
+      }
+      if (req.method() === "DELETE") {
+        finances = finances.filter((item) => item.id !== id);
+        return send(null);
+      }
+      return send(finances);
     }
     if (url.pathname.startsWith("/storage/v1/object/sign/"))
       return send({ signedURL: "/object/sign/audios/sample.webm?token=test" });
@@ -245,4 +269,41 @@ test("envio com resposta perdida repete o mesmo ID sem duplicar", async ({
   ).toBeVisible();
   expect(rows).toHaveLength(1);
   expect(calls).toBe(2);
+});
+
+test("financeiro registra conta, realiza pagamento, filtra e exclui", async ({
+  page,
+}) => {
+  await page.getByRole("button", { name: /Financeiro/ }).click();
+  await expect(page.getByRole("heading", { name: "Visão financeira" })).toBeVisible();
+  await page.getByRole("button", { name: /Novo lançamento/ }).first().click();
+  await page.getByLabel("Descrição").fill("Aluguel do escritório");
+  await page.getByRole("radio", { name: /Saída/ }).check();
+  await page.getByLabel("Valor").fill("1.250,50");
+  await page.getByLabel("Vencimento").fill("2026-10-10");
+  await page.getByLabel("Categoria").fill("Estrutura");
+  await page.getByRole("button", { name: /Salvar lançamento/ }).click();
+
+  expect(finances).toHaveLength(1);
+  await expect(page.getByText("A pagar", { exact: true })).toBeVisible();
+  await expect(page.locator("#summary-pending")).toHaveText("R$ 1.250,50");
+
+  await page.getByRole("button", { name: "Marcar pago" }).click();
+  await expect(page.getByText("Pago", { exact: true })).toBeVisible();
+  await expect(page.locator("#summary-balance")).toHaveText("-R$ 1.250,50");
+  await page.screenshot({ path: "test-results/finance-desktop.png", fullPage: true });
+
+  await page.getByPlaceholder("Buscar descrição…").fill("inexistente");
+  await expect(
+    page.getByText("Nenhum lançamento corresponde aos filtros."),
+  ).toBeVisible();
+  await page.getByPlaceholder("Buscar descrição…").fill("");
+
+  await page.getByRole("button", { name: "Excluir", exact: true }).click();
+  await page.getByRole("button", { name: "Manter lançamento" }).click();
+  expect(finances).toHaveLength(1);
+  await page.getByRole("button", { name: "Excluir", exact: true }).click();
+  await page.getByRole("button", { name: "Excluir lançamento" }).click();
+  await expect(page.getByText("Seu financeiro começa com um lançamento.")).toBeVisible();
+  expect(finances).toHaveLength(0);
 });

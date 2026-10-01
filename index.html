@@ -4,160 +4,68 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f6f5f1" />
-    <meta
-      name="description"
-      content="Um espaço pessoal para guardar ideias e transformá-las em prompts."
-    />
-    <title>Central de Ideias</title>
+    <meta name="description" content="CRM pessoal para organizar ideias e finanças em um só lugar." />
+    <title>Central Pessoal</title>
   </head>
   <body>
     <div id="app">
       <aside class="sidebar">
-        <a class="brand" href="/" aria-label="Central de Ideias"
-          ><span class="brand-icon">✳</span
-          ><span>central<span class="brand-light"> de ideias</span></span></a
-        >
-        <p class="eyebrow">SEU ESPAÇO DE CRIAÇÃO</p>
-        <button class="new-button" id="new-idea">
-          ＋ <span>Nova ideia</span><kbd>N</kbd>
-        </button>
-        <div class="nav-label">
-          ◫ <span>Minhas ideias</span
-          ><span id="idea-count" class="count">0</span>
-        </div>
-        <div class="sidebar-note">
-          <span class="note-star">✧</span>
-          <p>Uma ideia não precisa estar pronta para ser boa.</p>
-          <small>Comece pelo que está na sua cabeça.</small>
-        </div>
-        <div class="account">
-          <span class="avatar">EU</span>
-          <div>
-            <strong>Meu espaço pessoal</strong
-            ><small id="account-email">Acesso privado</small>
-          </div>
-          <button id="logout" class="icon-button" aria-label="Sair" hidden>
-            ↗
-          </button>
-        </div>
+        <a class="brand" href="/" aria-label="Central Pessoal"><span class="brand-icon">✳</span><span>central<span class="brand-light"> pessoal</span></span></a>
+        <p class="eyebrow">SEU ESPAÇO PARTICULAR</p>
+        <nav class="module-nav" aria-label="Módulos">
+          <button class="module-link active" data-view="ideas" type="button"><span>✦</span><strong>Ideias</strong><span id="idea-count" class="count">0</span></button>
+          <button class="module-link" data-view="finance" type="button"><span>◒</span><strong>Financeiro</strong><span id="finance-count" class="count">0</span></button>
+        </nav>
+        <button class="new-button" id="new-idea" type="button">＋ <span>Nova ideia</span><kbd>N</kbd></button>
+        <button class="new-button" id="new-finance" type="button" hidden>＋ <span>Novo lançamento</span><kbd>N</kbd></button>
+        <div class="sidebar-note"><span class="note-star">✧</span><p id="sidebar-quote">Uma ideia não precisa estar pronta para ser boa.</p><small id="sidebar-quote-detail">Comece pelo que está na sua cabeça.</small></div>
+        <div class="account"><span class="avatar">EU</span><div><strong>Meu espaço pessoal</strong><small id="account-email">Acesso privado</small></div><button id="logout" class="icon-button" aria-label="Sair" hidden>↗</button></div>
       </aside>
       <main>
-        <header class="topbar">
-          <span>Seu caderno, com um próximo passo.</span
-          ><span class="private-label">◈ &nbsp; Espaço privado</span>
-        </header>
-        <section class="page-heading">
-          <div>
-            <p class="eyebrow">CAPTURE. ORGANIZE. CRIE.</p>
-            <h1>Dê espaço às suas ideias<span>.</span></h1>
-            <p>
-              Do pensamento solto ao próximo projeto. Uma ideia de cada vez.
-            </p>
-          </div>
-          <span class="heading-art" aria-hidden="true">✳</span>
-        </section>
+        <header class="topbar"><span id="topbar-copy">Seu caderno, com um próximo passo.</span><span class="private-label">◈ &nbsp; Espaço privado</span></header>
+        <section class="page-heading"><div><p class="eyebrow" id="heading-eyebrow">CAPTURE. ORGANIZE. CRIE.</p><h1 id="heading-title">Dê espaço às suas ideias<span>.</span></h1><p id="heading-subtitle">Do pensamento solto ao próximo projeto. Uma ideia de cada vez.</p></div><span class="heading-art" id="heading-art" aria-hidden="true">✳</span></section>
         <div id="notice" role="status" aria-live="polite" hidden></div>
-        <section id="setup" class="panel" hidden>
-          <h2>Seu espaço está quase pronto</h2>
-          <p>
-            Configure a URL e a chave pública do Supabase no arquivo
-            <code>.env</code> para entrar e salvar suas ideias.
-          </p>
-          <p>O passo a passo está no README do projeto.</p>
-        </section>
-        <section id="login-panel" class="panel login-panel" hidden>
-          <span class="small-icon">↗</span>
-          <h2>Boas ideias começam aqui.</h2>
-          <p>Entre para acessar seu caderno pessoal.</p>
-          <form id="login-form">
-            <label
-              >E-mail<input
-                id="email"
-                type="email"
-                autocomplete="username"
-                required
-                placeholder="voce@exemplo.com" /></label
-            ><label
-              >Senha<input
-                id="password"
-                type="password"
-                autocomplete="current-password"
-                required
-                minlength="6"
-                placeholder="Sua senha" /></label
-            ><button class="primary" type="submit">
-              Entrar no meu espaço <span>→</span>
-            </button>
-          </form>
-          <small
-            >Acesso exclusivo. O usuário é criado pelo administrador.</small
-          >
-        </section>
+        <section id="setup" class="panel" hidden><h2>Seu espaço está quase pronto</h2><p>Configure a URL e a chave pública do Supabase no arquivo <code>.env</code>.</p><p>O passo a passo está no README do projeto.</p></section>
+        <section id="login-panel" class="panel login-panel" hidden><span class="small-icon">↗</span><h2>Seu espaço começa aqui.</h2><p>Entre para acessar suas ideias e finanças.</p><form id="login-form"><label>E-mail<input id="email" type="email" autocomplete="username" required placeholder="voce@exemplo.com" /></label><label>Senha<input id="password" type="password" autocomplete="current-password" required minlength="6" placeholder="Sua senha" /></label><button class="primary" type="submit">Entrar no meu espaço <span>→</span></button></form><small>Acesso exclusivo. O usuário é criado pelo administrador.</small></section>
         <section id="workspace" hidden>
-          <div class="history-heading">
-            <h2>Suas ideias <span id="history-count">0</span></h2>
-            <span>Um lugar para não esquecer</span>
-          </div>
-          <div id="history" aria-live="polite"></div>
-          <button id="load-more" class="secondary" hidden>
-            Carregar mais ideias
-          </button>
-          <section class="composer" aria-label="Nova ideia">
-            <div class="composer-title">
-              <span class="small-icon">✧</span
-              ><strong>O que você está pensando?</strong
-              ><span id="draft-kind">NOVA IDEIA</span>
-            </div>
-            <label class="sr-only" for="idea-text">Escreva sua ideia</label
-            ><textarea
-              id="idea-text"
-              maxlength="20000"
-              placeholder="Escreva uma ideia, mesmo que ela ainda esteja pela metade…"
-            ></textarea>
-            <div id="recording-panel" hidden>
-              <span class="record-dot"></span
-              ><strong id="recording-time">00:00</strong
-              ><span>Gravando sua ideia</span
-              ><button id="stop-recording" class="secondary">Parar</button
-              ><button id="cancel-recording" class="text-button">
-                Cancelar
-              </button>
-            </div>
-            <div id="audio-preview" hidden>
-              <audio id="draft-audio" controls></audio
-              ><button id="rerecord" class="text-button">Regravar</button
-              ><button id="discard-audio" class="text-button">Descartar</button>
-            </div>
-            <div class="composer-footer">
-              <button id="record" class="secondary">
-                <span aria-hidden="true">♩</span> Gravar áudio</button
-              ><label class="check-label"
-                ><input type="checkbox" id="generate-prompt" checked />Gerar
-                prompt <span class="ai-chip">IA</span></label
-              ><button id="send" class="primary">
-                Salvar ideia <span>↑</span>
-              </button>
-            </div>
-            <p class="composer-hint">
-              <span id="recording-limit">Áudio de até 5 minutos</span
-              ><span>Suas ideias ficam salvas só para você.</span>
-            </p>
+          <section id="ideas-workspace">
+            <div class="history-heading"><h2>Suas ideias <span id="history-count">0</span></h2><span>Um lugar para não esquecer</span></div>
+            <div id="history" aria-live="polite"></div><button id="load-more" class="secondary" hidden>Carregar mais ideias</button>
+            <section class="composer" aria-label="Nova ideia">
+              <div class="composer-title"><span class="small-icon">✧</span><strong>O que você está pensando?</strong><span id="draft-kind">NOVA IDEIA</span></div>
+              <label class="sr-only" for="idea-text">Escreva sua ideia</label><textarea id="idea-text" maxlength="20000" placeholder="Escreva uma ideia, mesmo que ela ainda esteja pela metade…"></textarea>
+              <div id="recording-panel" hidden><span class="record-dot"></span><strong id="recording-time">00:00</strong><span>Gravando sua ideia</span><button id="stop-recording" class="secondary">Parar</button><button id="cancel-recording" class="text-button">Cancelar</button></div>
+              <div id="audio-preview" hidden><audio id="draft-audio" controls></audio><button id="rerecord" class="text-button">Regravar</button><button id="discard-audio" class="text-button">Descartar</button></div>
+              <div class="composer-footer"><button id="record" class="secondary"><span aria-hidden="true">♩</span> Gravar áudio</button><label class="check-label"><input type="checkbox" id="generate-prompt" checked />Gerar prompt <span class="ai-chip">IA</span></label><button id="send" class="primary">Salvar ideia <span>↑</span></button></div>
+              <p class="composer-hint"><span id="recording-limit">Áudio de até 5 minutos</span><span>Suas ideias ficam salvas só para você.</span></p>
+            </section>
           </section>
-          <footer>Da sua cabeça para o mundo. <span>✧</span></footer>
+          <section id="finance-workspace" hidden>
+            <div class="finance-actions"><div><h2>Visão financeira</h2><p>Valores realizados e compromissos em aberto.</p></div><button class="primary" id="finance-add-top" type="button">Novo lançamento <span>＋</span></button></div>
+            <div class="summary-grid" aria-label="Resumo financeiro">
+              <article class="summary-card balance-card"><span class="summary-icon">◒</span><small>SALDO REALIZADO</small><strong id="summary-balance">R$ 0,00</strong><span>Entradas menos saídas</span></article>
+              <article class="summary-card income-card"><span class="summary-icon">↙</span><small>ENTRADAS NO MÊS</small><strong id="summary-income">R$ 0,00</strong><span>Valores recebidos</span></article>
+              <article class="summary-card expense-card"><span class="summary-icon">↗</span><small>SAÍDAS NO MÊS</small><strong id="summary-expense">R$ 0,00</strong><span>Valores pagos</span></article>
+              <article class="summary-card pending-card"><span class="summary-icon">◷</span><small>EM ABERTO</small><strong id="summary-pending">R$ 0,00</strong><span id="summary-pending-detail">Nada a pagar ou receber</span></article>
+            </div>
+            <section class="finance-panel">
+              <div class="finance-panel-head"><div><h2>Lançamentos</h2><span id="finance-list-count">0 registros</span></div><div class="finance-filters"><label><span class="sr-only">Buscar lançamento</span><input id="finance-search" type="search" placeholder="Buscar descrição…" /></label><label><span class="sr-only">Filtrar por tipo</span><select id="finance-type-filter"><option value="">Todos os tipos</option><option value="entrada">Entradas</option><option value="saida">Saídas</option></select></label><label><span class="sr-only">Filtrar por situação</span><select id="finance-status-filter"><option value="">Todas as situações</option><option value="pendente">Em aberto</option><option value="realizado">Realizados</option></select></label></div></div>
+              <div id="finance-list" aria-live="polite"></div>
+            </section>
+          </section>
+          <footer id="workspace-footer">Da sua cabeça para o mundo. <span>✧</span></footer>
         </section>
       </main>
     </div>
-    <dialog id="delete-dialog">
-      <h2>Excluir esta ideia?</h2>
-      <p>
-        O texto, o resumo, o prompt e o áudio original serão removidos. Esta
-        ação não pode ser desfeita.
-      </p>
-      <div class="actions">
-        <button id="cancel-delete" class="secondary">Manter ideia</button
-        ><button id="confirm-delete" class="danger">Excluir ideia</button>
-      </div>
-    </dialog>
+    <dialog id="delete-dialog"><h2>Excluir esta ideia?</h2><p>O texto, o resumo, o prompt e o áudio original serão removidos. Esta ação não pode ser desfeita.</p><div class="actions"><button id="cancel-delete" class="secondary">Manter ideia</button><button id="confirm-delete" class="danger">Excluir ideia</button></div></dialog>
+    <dialog id="finance-dialog" class="finance-dialog"><form id="finance-form"><div class="dialog-heading"><div><p class="eyebrow">FINANCEIRO</p><h2 id="finance-dialog-title">Novo lançamento</h2></div><button type="button" id="finance-close" class="icon-button" aria-label="Fechar">×</button></div><input type="hidden" id="finance-id" /><div class="finance-form-grid">
+      <label class="field field-wide">Descrição<input id="finance-description" maxlength="180" required placeholder="Ex.: Pagamento de cliente" /></label>
+      <fieldset class="field field-wide type-choice"><legend>Tipo</legend><label><input type="radio" name="finance-type" value="entrada" required /><span>↙ Entrada</span></label><label><input type="radio" name="finance-type" value="saida" required /><span>↗ Saída</span></label></fieldset>
+      <label class="field">Valor<input id="finance-value" inputmode="decimal" required placeholder="0,00" /></label><label class="field">Vencimento<input id="finance-due-date" type="date" required /></label>
+      <label class="field">Situação<select id="finance-status" required><option value="pendente">Em aberto</option><option value="realizado">Realizado</option></select></label><label class="field">Data de realização<input id="finance-realized-date" type="date" /></label>
+      <label class="field field-wide">Categoria<input id="finance-category" maxlength="80" placeholder="Ex.: Clientes, aluguel, ferramentas" /></label><label class="field field-wide">Observações<textarea id="finance-notes" maxlength="1000" rows="3" placeholder="Informações adicionais (opcional)"></textarea></label>
+    </div><div class="dialog-actions"><button type="button" id="finance-cancel" class="secondary">Cancelar</button><button class="primary" type="submit">Salvar lançamento <span>→</span></button></div></form></dialog>
+    <dialog id="finance-delete-dialog"><h2>Excluir este lançamento?</h2><p>O registro financeiro será removido permanentemente.</p><div class="actions"><button id="finance-delete-cancel" class="secondary">Manter lançamento</button><button id="finance-delete-confirm" class="danger">Excluir lançamento</button></div></dialog>
     <script type="module" src="/src/app.js"></script>
   </body>
 </html>

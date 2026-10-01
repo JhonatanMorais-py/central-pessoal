@@ -35,6 +35,7 @@ function readBody(req) {
 
 function demoSupabase() {
   const ideas = [];
+  const finances = [];
   const audios = new Map();
   return {
     name: "central-de-ideias-demo",
@@ -94,6 +95,41 @@ function demoSupabase() {
           const from = Number(req.headers.range?.match(/(\d+)-/)?.[1] || 0);
           const to = Number(req.headers.range?.match(/-(\d+)/)?.[1] || from + 29);
           return json(res, ideas.slice(from, to + 1));
+        }
+
+        if (path === "/rest/v1/fin_lancamentos") {
+          const id = url.searchParams.get("id")?.replace(/^eq\./, "");
+          if (req.method === "POST") {
+            const input = JSON.parse((await readBody(req)).toString() || "{}");
+            const row = {
+              id: input.id || crypto.randomUUID(),
+              ...input,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+            finances.unshift(row);
+            return json(res, null, 201);
+          }
+          if (req.method === "PATCH") {
+            const input = JSON.parse((await readBody(req)).toString() || "{}");
+            const row = finances.find((item) => item.id === id);
+            if (row)
+              Object.assign(row, input, { updated_at: new Date().toISOString() });
+            return json(res, null);
+          }
+          if (req.method === "DELETE") {
+            const index = finances.findIndex((item) => item.id === id);
+            if (index >= 0) finances.splice(index, 1);
+            return json(res, null);
+          }
+          return json(
+            res,
+            [...finances].sort(
+              (a, b) =>
+                a.data_vencimento.localeCompare(b.data_vencimento) ||
+                b.created_at.localeCompare(a.created_at),
+            ),
+          );
         }
 
         if (path.startsWith("/storage/v1/object/sign/audios/")) {

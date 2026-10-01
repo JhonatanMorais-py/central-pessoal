@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import "./style.css";
 import { recordingFormat, extension, clock, friendlyError } from "./core.js";
+import { createFinanceController } from "./finance.js";
 const $ = (id) => document.getElementById(id);
 const config = {
   url: import.meta.env.VITE_SUPABASE_URL,
@@ -32,7 +33,8 @@ let user,
 let ideas = [],
   offset = 0,
   deleteId,
-  authVersion = 0;
+  authVersion = 0,
+  activeView = "ideas";
 function notice(text, error = false) {
   $("notice").textContent = text;
   $("notice").dataset.error = error;
@@ -80,6 +82,59 @@ function button(label, fn, className = "text-button") {
   node.type = "button";
   node.onclick = () => run(fn);
   return node;
+}
+const finance = createFinanceController({ client, check, notice, run });
+
+const viewCopy = {
+  ideas: {
+    eyebrow: "CAPTURE. ORGANIZE. CRIE.",
+    title: "Dê espaço às suas ideias.",
+    subtitle: "Do pensamento solto ao próximo projeto. Uma ideia de cada vez.",
+    art: "✳",
+    topbar: "Seu caderno, com um próximo passo.",
+    quote: "Uma ideia não precisa estar pronta para ser boa.",
+    detail: "Comece pelo que está na sua cabeça.",
+    footer: "Da sua cabeça para o mundo.",
+  },
+  finance: {
+    eyebrow: "REGISTRE. ACOMPANHE. DECIDA.",
+    title: "Clareza para suas finanças.",
+    subtitle: "Entradas, saídas e compromissos reunidos em um só lugar.",
+    art: "◒",
+    topbar: "Seu dinheiro, com contexto e direção.",
+    quote: "Organizar o dinheiro também é criar espaço.",
+    detail: "Registre hoje para decidir melhor amanhã.",
+    footer: "Clareza para escolher o próximo passo.",
+  },
+};
+
+async function switchView(view) {
+  if (!viewCopy[view] || view === activeView) return;
+  activeView = view;
+  document
+    .querySelectorAll(".module-link")
+    .forEach((item) => item.classList.toggle("active", item.dataset.view === view));
+  $("ideas-workspace").hidden = view !== "ideas";
+  $("finance-workspace").hidden = view !== "finance";
+  $("new-idea").hidden = view !== "ideas";
+  $("new-finance").hidden = view !== "finance";
+  const copy = viewCopy[view];
+  $("heading-eyebrow").textContent = copy.eyebrow;
+  $("heading-title").replaceChildren(
+    document.createTextNode(copy.title.slice(0, -1)),
+    el("span", "."),
+  );
+  $("heading-subtitle").textContent = copy.subtitle;
+  $("heading-art").textContent = copy.art;
+  $("topbar-copy").textContent = copy.topbar;
+  $("sidebar-quote").textContent = copy.quote;
+  $("sidebar-quote-detail").textContent = copy.detail;
+  $("workspace-footer").replaceChildren(
+    document.createTextNode(`${copy.footer} `),
+    el("span", "✧"),
+  );
+  notice("");
+  if (view === "finance" && user) await finance.refresh();
 }
 async function invoke(body) {
   const { data, error } = await client.functions.invoke("ideias", { body });
@@ -242,9 +297,14 @@ function render() {
           const editActions = el("div", null, "actions");
           editActions.append(
             button("Salvar correção", () => saveCorrection(false)),
-            button("Salvar e gerar resumo + prompt", () =>
-              saveCorrection(true),
-            ),
+          );
+          if (aiEnabled)
+            editActions.append(
+              button("Salvar e gerar resumo + prompt", () =>
+                saveCorrection(true),
+              ),
+            );
+          editActions.append(
             button("Cancelar", async () => {
               area.remove();
               editActions.remove();
@@ -569,7 +629,7 @@ async function sessionChanged(session) {
   $("account-email").textContent = user?.email || "Acesso privado";
   if (user) {
     try {
-      await refresh();
+      await Promise.all([refresh(), finance.setUser(user)]);
     } catch (e) {
       notice(friendlyError(e), true);
     }
@@ -582,6 +642,7 @@ async function sessionChanged(session) {
     draftId = null;
     uploadedPath = null;
     $("idea-count").textContent = "0";
+    await finance.setUser(null);
   }
 }
 if (!configured) $("setup").hidden = false;
@@ -606,6 +667,10 @@ document.addEventListener("keydown", (e) => {
     !$("delete-dialog").open
   ) {
     e.preventDefault();
-    $("new-idea").click();
+    (activeView === "ideas" ? $("new-idea") : $("new-finance")).click();
   }
+});
+
+document.querySelectorAll(".module-link").forEach((item) => {
+  item.onclick = () => run(() => switchView(item.dataset.view));
 });
