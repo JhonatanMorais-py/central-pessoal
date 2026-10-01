@@ -90,7 +90,7 @@ const viewCopy = {
     eyebrow: "CAPTURE. ORGANIZE. CRIE.",
     title: "Dê espaço às suas ideias.",
     subtitle: "Do pensamento solto ao próximo projeto. Uma ideia de cada vez.",
-    art: "✳",
+    art: "ideas",
     topbar: "Seu caderno, com um próximo passo.",
     quote: "Uma ideia não precisa estar pronta para ser boa.",
     detail: "Comece pelo que está na sua cabeça.",
@@ -100,7 +100,7 @@ const viewCopy = {
     eyebrow: "REGISTRE. ACOMPANHE. DECIDA.",
     title: "Clareza para suas finanças.",
     subtitle: "Entradas, saídas e compromissos reunidos em um só lugar.",
-    art: "◒",
+    art: "finance",
     topbar: "Seu dinheiro, com contexto e direção.",
     quote: "Organizar o dinheiro também é criar espaço.",
     detail: "Registre hoje para decidir melhor amanhã.",
@@ -125,14 +125,11 @@ async function switchView(view) {
     el("span", "."),
   );
   $("heading-subtitle").textContent = copy.subtitle;
-  $("heading-art").textContent = copy.art;
+  $("heading-art").className = `heading-art ${copy.art}`;
   $("topbar-copy").textContent = copy.topbar;
   $("sidebar-quote").textContent = copy.quote;
   $("sidebar-quote-detail").textContent = copy.detail;
-  $("workspace-footer").replaceChildren(
-    document.createTextNode(`${copy.footer} `),
-    el("span", "✧"),
-  );
+  $("workspace-footer").textContent = copy.footer;
   notice("");
   if (view === "finance" && user) await finance.refresh();
 }
@@ -179,7 +176,7 @@ function render() {
   if (!ideas.length) {
     const empty = el("div", null, "empty");
     empty.append(
-      el("span", "✧"),
+      el("span", null, "empty-mark"),
       el("h3", "Toda criação começa com uma ideia."),
       el("p", "Escreva ou grave a primeira. O resto a gente organiza."),
     );
@@ -201,7 +198,7 @@ function render() {
     meta.append(
       el(
         "span",
-        idea.source === "audio" ? "♩ IDEIA EM ÁUDIO" : "✎ IDEIA EM TEXTO",
+        idea.source === "audio" ? "IDEIA EM ÁUDIO" : "IDEIA EM TEXTO",
       ),
       el("span", "·"),
       el(
@@ -225,7 +222,7 @@ function render() {
     );
     if (idea.audio_path)
       body.append(
-        button("▷ Ouvir áudio original", async () => {
+        button("Ouvir áudio original", async () => {
           const data = check(
             await client.storage
               .from("audios")

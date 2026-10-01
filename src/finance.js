@@ -111,7 +111,7 @@ export function createFinanceController({ client, check, notice, run }) {
     if (!filtered.length) {
       const empty = element("div", null, "empty finance-empty");
       empty.append(
-        element("span", "◒"),
+        element("span", null, "empty-mark"),
         element(
           "h3",
           items.length
@@ -134,11 +134,7 @@ export function createFinanceController({ client, check, notice, run }) {
         item.status === "pendente" && item.data_vencimento < currentDay;
       const row = element("article", null, "finance-row");
       row.dataset.id = item.id;
-      const mark = element(
-        "span",
-        item.tipo === "entrada" ? "↙" : "↗",
-        `movement-mark ${item.tipo}`,
-      );
+      const mark = element("span", null, `movement-mark ${item.tipo}`);
       const description = element("div", null, "movement-description");
       description.append(
         element("strong", item.descricao),
@@ -162,7 +158,7 @@ export function createFinanceController({ client, check, notice, run }) {
       );
       const value = element(
         "strong",
-        `${item.tipo === "entrada" ? "+" : "−"} ${brl.format(item.valor)}`,
+        `${item.tipo === "entrada" ? "+" : "-"} ${brl.format(item.valor)}`,
         `movement-value ${item.tipo}`,
       );
       const state = element(

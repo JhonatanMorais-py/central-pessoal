@@ -203,19 +203,44 @@ test("gravação real no navegador com microfone sintético, limite, upload e tr
     page.getByText("Ideia transcrita em português.", { exact: true }),
   ).toBeVisible();
 });
-test("cancelar gravação e layout móvel sem rolagem horizontal", async ({
+test("layout móvel funciona em iOS e Android sem rolagem horizontal", async ({
   page,
 }) => {
+  for (const viewport of [
+    { width: 320, height: 568 },
+    { width: 390, height: 844 },
+    { width: 412, height: 915 },
+  ]) {
+    await page.setViewportSize(viewport);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await expect(page.getByRole("button", { name: /Ideias/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Financeiro/ })).toBeVisible();
+  }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Gravar áudio", exact: true }).click();
   await page.getByRole("button", { name: "Cancelar", exact: true }).click();
   await expect(page.locator("#audio-preview")).toBeHidden();
   expect(rows).toHaveLength(0);
+  await page.getByRole("button", { name: /Financeiro/ }).click();
+  await page.getByRole("button", { name: /Novo lançamento/ }).click();
+  await expect(page.locator("#finance-dialog")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Salvar lançamento" }),
+  ).toBeVisible();
   expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
+    await page.locator("#finance-description").evaluate(
+      (input) => Number.parseFloat(getComputedStyle(input).fontSize) >= 16,
     ),
   ).toBe(true);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+  ).toBe(true);
+  await page.screenshot({ path: "test-results/mobile-dialog.png", fullPage: true });
+  await page.getByRole("button", { name: "Fechar" }).click();
   await page.screenshot({ path: "test-results/mobile.png", fullPage: true });
 });
 
