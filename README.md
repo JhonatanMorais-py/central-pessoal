@@ -1,4 +1,4 @@
-# Central Pessoal
+# CitraCRM
 
 CRM pessoal para organizar ideias e finanças em um só lugar. O módulo financeiro registra entradas, saídas, contas a pagar e contas a receber; o módulo de ideias aceita texto ou áudio. A aplicação usa HTML, CSS e JavaScript com Vite, Supabase Auth/PostgreSQL/Storage e publicação estática no Render.
 

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: central-pessoal
+    name: citracrm
     runtime: static
     buildCommand: npm ci && npm run build
     staticPublishPath: dist

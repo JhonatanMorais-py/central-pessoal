@@ -38,7 +38,7 @@ function demoSupabase() {
   const finances = [];
   const audios = new Map();
   return {
-    name: "central-de-ideias-demo",
+    name: "citracrm-demo",
     configureServer(server) {
       server.middlewares.use("/mock-supabase", async (req, res) => {
         const url = new URL(req.url, "http://localhost");

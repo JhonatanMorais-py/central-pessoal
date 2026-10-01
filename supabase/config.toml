@@ -1,4 +1,4 @@
-project_id = "central-de-ideias"
+project_id = "citracrm"
 
 [auth]
 enable_signup = false
