@@ -1,9 +1,10 @@
 import { test, expect } from "@playwright/test";
 const uid = "11111111-1111-4111-8111-111111111111";
-let rows, finances, processCalls, uploads;
+let rows, finances, tasks, processCalls, uploads;
 test.beforeEach(async ({ page }) => {
   rows = [];
   finances = [];
+  tasks = [];
   processCalls = [];
   uploads = [];
   await page.route("https://fonts.googleapis.com/**", (route) => route.abort());
@@ -69,6 +70,28 @@ test.beforeEach(async ({ page }) => {
         return send(null);
       }
       return send(finances);
+    }
+    if (url.pathname.startsWith("/rest/v1/tarefas")) {
+      const id = url.searchParams.get("id")?.replace(/^eq\./, "");
+      if (req.method() === "POST") {
+        tasks.unshift({
+          id: crypto.randomUUID(),
+          ...req.postDataJSON(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        return send(null, 201);
+      }
+      if (req.method() === "PATCH") {
+        const row = tasks.find((item) => item.id === id);
+        if (row) Object.assign(row, req.postDataJSON());
+        return send(null);
+      }
+      if (req.method() === "DELETE") {
+        tasks = tasks.filter((item) => item.id !== id);
+        return send(null);
+      }
+      return send(tasks);
     }
     if (url.pathname.startsWith("/storage/v1/object/sign/"))
       return send({ signedURL: "/object/sign/audios/sample.webm?token=test" });
@@ -219,6 +242,7 @@ test("layout móvel funciona em iOS e Android sem rolagem horizontal", async ({
     ).toBe(true);
     await expect(page.getByRole("button", { name: /Ideias/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Financeiro/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Tarefas/ })).toBeVisible();
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Gravar áudio", exact: true }).click();
@@ -302,7 +326,10 @@ test("financeiro registra conta, realiza pagamento, filtra e exclui", async ({
   await page.getByRole("button", { name: /Financeiro/ }).click();
   await expect(page.getByRole("heading", { name: "Visão financeira" })).toBeVisible();
   await page.getByRole("button", { name: /Novo lançamento/ }).first().click();
-  await page.getByLabel("Descrição").fill("Aluguel do escritório");
+  await page
+    .locator("#finance-dialog")
+    .getByLabel("Descrição")
+    .fill("Aluguel do escritório");
   await page.getByRole("radio", { name: /Saída/ }).check();
   await page.getByLabel("Valor").fill("1.250,50");
   await page.getByLabel("Vencimento").fill("2026-10-10");
@@ -331,4 +358,47 @@ test("financeiro registra conta, realiza pagamento, filtra e exclui", async ({
   await page.getByRole("button", { name: "Excluir lançamento" }).click();
   await expect(page.getByText("Seu financeiro começa com um lançamento.")).toBeVisible();
   expect(finances).toHaveLength(0);
+});
+
+test("tarefas cria, conclui, reabre, filtra e exclui", async ({ page }) => {
+  await page.getByRole("button", { name: /Tarefas/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "Suas tarefas", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: /Nova tarefa/ }).first().click();
+  const taskDialog = page.locator("#task-dialog");
+  await taskDialog.getByLabel("Título").fill("Enviar proposta comercial");
+  await taskDialog.getByLabel("Prazo").fill("2026-10-10");
+  await taskDialog.getByLabel("Descrição").fill("Revisar valores antes do envio.");
+  await page.getByRole("button", { name: "Salvar tarefa" }).click();
+
+  expect(tasks).toHaveLength(1);
+  await expect(page.locator("#task-pending")).toHaveText("1");
+  await page
+    .getByRole("button", { name: "Concluir Enviar proposta comercial" })
+    .click();
+  await expect(page.locator("#task-completed")).toHaveText("1");
+  await expect(page.locator("#task-pending")).toHaveText("0");
+
+  await page.getByLabel("Filtrar tarefas").selectOption("completed");
+  await expect(page.getByText("Enviar proposta comercial")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Reabrir Enviar proposta comercial" })
+    .click();
+  await expect(page.getByText("Nenhuma tarefa corresponde aos filtros.")).toBeVisible();
+  await page.getByLabel("Filtrar tarefas").selectOption("");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+  ).toBe(true);
+  await page.screenshot({ path: "test-results/tasks-mobile.png", fullPage: true });
+
+  await page.getByRole("button", { name: "Excluir", exact: true }).click();
+  await page.getByRole("button", { name: "Manter tarefa" }).click();
+  expect(tasks).toHaveLength(1);
+  await page.getByRole("button", { name: "Excluir", exact: true }).click();
+  await page.getByRole("button", { name: "Excluir tarefa" }).click();
+  await expect(page.getByText("Sua lista de tarefas está vazia.")).toBeVisible();
+  expect(tasks).toHaveLength(0);
 });

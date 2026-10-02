@@ -1,12 +1,12 @@
 # CitraCRM
 
-CRM pessoal para organizar ideias e finanças em um só lugar. O módulo financeiro registra entradas, saídas, contas a pagar e contas a receber; o módulo de ideias aceita texto ou áudio. A aplicação usa HTML, CSS e JavaScript com Vite, Supabase Auth/PostgreSQL/Storage e publicação estática no Render.
+CRM pessoal para organizar ideias, finanças e tarefas em um só lugar. O módulo financeiro registra entradas, saídas, contas a pagar e contas a receber; tarefas podem ser concluídas e reabertas; ideias aceitam texto ou áudio. A aplicação usa HTML, CSS e JavaScript com Vite, Supabase Auth/PostgreSQL/Storage e publicação estática no Render.
 
 ## 1. Preparar o Supabase
 
 1. Crie um projeto no [Supabase](https://supabase.com/dashboard). Guarde sua URL `https://SEU-PROJETO.supabase.co` e a **publishable key** (`sb_publishable_...`, Settings → API Keys). A chave legada `anon` também funciona. Nunca use `service_role` ou secret key no navegador.
 2. Gere um token pessoal em **Account → Access Tokens** e preencha `SUPABASE_ACCESS_TOKEN` no arquivo `.env`. Essa variável é privada e serve somente para autenticar o Supabase CLI. Ela não usa o prefixo `VITE_`, não entra no bundle do navegador e não deve ser configurada no Render.
-3. Abra **SQL Editor** e execute, na ordem, `supabase/migrations/202609300001_initial.sql` e `supabase/migrations/202610010001_financeiro.sql`. A primeira cria ideias, políticas RLS e o bucket privado `audios`; a segunda cria os lançamentos financeiros e suas políticas por usuário. Alternativamente, carregue as variáveis com `set -a; source .env; set +a`, execute `npx supabase link --project-ref SEU-PROJETO` e depois `npx supabase db push`.
+3. Abra **SQL Editor** e execute, na ordem, as migrações `202609300001_initial.sql`, `202610010001_financeiro.sql` e `202610010002_tarefas.sql` em `supabase/migrations/`. Elas criam ideias, lançamentos financeiros, tarefas, políticas RLS e o bucket privado `audios`. Alternativamente, carregue as variáveis com `set -a; source .env; set +a`, execute `npx supabase link --project-ref SEU-PROJETO` e depois `npx supabase db push`.
 4. Em **Authentication → Sign In / Providers**, desative **Allow new users to sign up**. O `config.toml` faz isso no ambiente local, mas não substitui a configuração do projeto hospedado. Mantenha login por e-mail e senha habilitado.
 5. Em **Authentication → Users → Add user → Create new user**, crie seu e-mail e uma senha forte e marque confirmação automática do e-mail. A aplicação não oferece cadastro público, convite ou recuperação de senha. Para redefinir sua senha, use o painel administrativo do Supabase.
 6. Em **Authentication → URL Configuration**, configure o Site URL final do Render. Para o desenvolvimento, inclua `http://localhost:5173` entre as URLs permitidas.
@@ -64,7 +64,7 @@ Abra `http://localhost:5173`. Faça login com o usuário criado. O front-end loc
 
 ### Demonstração local sem Supabase
 
-Este repositório inclui `.env.demo` para testar a interface imediatamente com `npm run dev:demo`. Use `teste@local.dev` e senha `teste123`. Nesse modo, o servidor de desenvolvimento do Vite mantém ideias, áudios e lançamentos financeiros somente em memória e simula resumo, prompt e transcrição. Os dados são apagados ao reiniciar o servidor. O plugin de demonstração só é usado no servidor de desenvolvimento e não faz parte de `npm run build` nem da publicação no Render.
+Este repositório inclui `.env.demo` para testar a interface imediatamente com `npm run dev:demo`. Use `teste@local.dev` e senha `teste123`. Nesse modo, o servidor de desenvolvimento do Vite mantém ideias, áudios, lançamentos financeiros e tarefas somente em memória e simula resumo, prompt e transcrição. Os dados são apagados ao reiniciar o servidor. O plugin de demonstração só é usado no servidor de desenvolvimento e não faz parte de `npm run build` nem da publicação no Render.
 
 Para usar um Supabase real localmente, preencha o arquivo `.env` já criado na raiz e execute `npm run dev`. Preencha também `supabase/functions/.env` antes de publicar a função.
 
@@ -84,6 +84,9 @@ Não configure Web Service pago ou processo `npm run dev` para produção: o art
 
 ## Fluxos e recuperação
 
+- **Tarefas:** permite criar, editar, concluir, reabrir, buscar, filtrar e excluir. O prazo é opcional; tarefas pendentes com prazo anterior ao dia atual são identificadas como atrasadas.
+- A contagem no menu representa apenas tarefas pendentes. Os cartões do módulo mostram pendentes, concluídas e atrasadas.
+- Cada tarefa pertence ao usuário autenticado e está protegida por políticas RLS de leitura, criação, alteração e exclusão.
 - **Financeiro:** um lançamento de entrada pendente representa uma conta a receber; uma saída pendente representa uma conta a pagar. Ao marcar como recebido ou pago, o valor passa para o saldo realizado e para os totais do mês da data de realização.
 - Os cartões mostram saldo realizado, entradas e saídas do mês e o total em aberto. Busca, tipo e situação filtram a lista sem alterar os totais gerais.
 - Valores financeiros são armazenados como `numeric(14,2)`, nunca como ponto flutuante. Data de realização é obrigatória para registros realizados e proibida para pendentes; o banco também valida essas regras.
@@ -118,8 +121,8 @@ npx deno test --allow-env tests/edge.test.ts
 npm run build
 ```
 
-- Testes Node: conversão de moeda, totais financeiros, negociação de formatos e validação de áudio/IA; as duas migrações são executadas em PostgreSQL WASM (PGlite) com dois usuários para testar RLS e consistência. O esquema Auth/Storage é simulado nesse teste.
-- Testes de navegador Chromium: financeiro completo, login, texto, geração, cópia, correção, exclusão/cancelamento, logout, cota/retry sem duplicação, gravação via MediaRecorder com microfone sintético, limite automático, upload e layout móvel. As APIs são simuladas, sem gastar cota.
+- Testes Node: tarefas, conversão de moeda, totais financeiros, negociação de formatos e validação de áudio/IA; as três migrações são executadas em PostgreSQL WASM (PGlite) com dois usuários para testar RLS e consistência. O esquema Auth/Storage é simulado nesse teste.
+- Testes de navegador Chromium: tarefas e financeiro completos, login, texto, geração, cópia, correção, exclusão/cancelamento, logout, cota/retry sem duplicação, gravação via MediaRecorder com microfone sintético, limite automático, upload e layout móvel. As APIs são simuladas, sem gastar cota.
 - Testes Edge: executam o handler real com transporte HTTP simulado. Não substituem teste com serviço hospedado.
 - Build não exige chaves reais. Sem elas, integrações reais, reprodução remota, qualidade de áudio físico, Safari/iOS e publicação não podem ser confirmadas.
 

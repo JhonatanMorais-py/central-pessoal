@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import "./style.css";
 import { recordingFormat, extension, clock, friendlyError } from "./core.js";
 import { createFinanceController } from "./finance.js";
+import { createTaskController } from "./tasks.js";
 const $ = (id) => document.getElementById(id);
 const config = {
   url: import.meta.env.VITE_SUPABASE_URL,
@@ -84,6 +85,7 @@ function button(label, fn, className = "text-button") {
   return node;
 }
 const finance = createFinanceController({ client, check, notice, run });
+const tasks = createTaskController({ client, check, notice, run });
 
 const viewCopy = {
   ideas: {
@@ -106,6 +108,16 @@ const viewCopy = {
     detail: "Registre hoje para decidir melhor amanhã.",
     footer: "Clareza para escolher o próximo passo.",
   },
+  tasks: {
+    eyebrow: "PLANEJE. EXECUTE. CONCLUA.",
+    title: "Organize suas tarefas.",
+    subtitle: "Registre o que precisa ser feito e acompanhe cada conclusão.",
+    art: "tasks",
+    topbar: "Seu trabalho, organizado por próximos passos.",
+    quote: "Uma tarefa clara deixa o próximo passo mais leve.",
+    detail: "Registre, conclua e siga em frente.",
+    footer: "Um passo de cada vez.",
+  },
 };
 
 async function switchView(view) {
@@ -116,8 +128,10 @@ async function switchView(view) {
     .forEach((item) => item.classList.toggle("active", item.dataset.view === view));
   $("ideas-workspace").hidden = view !== "ideas";
   $("finance-workspace").hidden = view !== "finance";
+  $("tasks-workspace").hidden = view !== "tasks";
   $("new-idea").hidden = view !== "ideas";
   $("new-finance").hidden = view !== "finance";
+  $("new-task").hidden = view !== "tasks";
   const copy = viewCopy[view];
   $("heading-eyebrow").textContent = copy.eyebrow;
   $("heading-title").replaceChildren(
@@ -132,6 +146,7 @@ async function switchView(view) {
   $("workspace-footer").textContent = copy.footer;
   notice("");
   if (view === "finance" && user) await finance.refresh();
+  if (view === "tasks" && user) await tasks.refresh();
 }
 async function invoke(body) {
   const { data, error } = await client.functions.invoke("ideias", { body });
@@ -626,7 +641,7 @@ async function sessionChanged(session) {
   $("account-email").textContent = user?.email || "Acesso privado";
   if (user) {
     try {
-      await Promise.all([refresh(), finance.setUser(user)]);
+      await Promise.all([refresh(), finance.setUser(user), tasks.setUser(user)]);
     } catch (e) {
       notice(friendlyError(e), true);
     }
@@ -640,6 +655,7 @@ async function sessionChanged(session) {
     uploadedPath = null;
     $("idea-count").textContent = "0";
     await finance.setUser(null);
+    await tasks.setUser(null);
   }
 }
 if (!configured) $("setup").hidden = false;
@@ -664,7 +680,11 @@ document.addEventListener("keydown", (e) => {
     !$("delete-dialog").open
   ) {
     e.preventDefault();
-    (activeView === "ideas" ? $("new-idea") : $("new-finance")).click();
+    ({
+      ideas: $("new-idea"),
+      finance: $("new-finance"),
+      tasks: $("new-task"),
+    })[activeView].click();
   }
 });
 

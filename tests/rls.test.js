@@ -31,6 +31,15 @@ test("migração PostgreSQL: isolamento de dois usuários, Storage privado e tra
       "utf8",
     ),
   );
+  await db.exec(
+    await readFile(
+      new URL(
+        "../supabase/migrations/202610010002_tarefas.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
   assert.equal(
     (await db.query("select public from storage.buckets")).rows[0].public,
     false,
@@ -38,9 +47,11 @@ test("migração PostgreSQL: isolamento de dois usuários, Storage privado e tra
   await db.exec(`set role authenticated; set request.jwt.claim.sub='11111111-1111-4111-8111-111111111111';
  insert into public.cad_ideias(id,source,original_text) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','text','minha ideia');
  insert into public.fin_lancamentos(descricao,tipo,status,valor,data_vencimento) values ('Cliente A','entrada','pendente',1250.50,'2026-10-10');
+ insert into public.tarefas(titulo,data_limite) values ('Minha tarefa','2026-10-10');
  insert into storage.objects(bucket_id,name) values ('audios','11111111-1111-4111-8111-111111111111/test.webm');`);
   assert.equal((await db.query("select * from cad_ideias")).rows.length, 1);
   assert.equal((await db.query("select * from fin_lancamentos")).rows.length, 1);
+  assert.equal((await db.query("select * from tarefas")).rows.length, 1);
   assert.equal(
     (
       await db.query(
@@ -62,6 +73,7 @@ test("migração PostgreSQL: isolamento de dois usuários, Storage privado e tra
   );
   assert.equal((await db.query("select * from cad_ideias")).rows.length, 0);
   assert.equal((await db.query("select * from fin_lancamentos")).rows.length, 0);
+  assert.equal((await db.query("select * from tarefas")).rows.length, 0);
   assert.equal(
     (await db.query("select * from storage.objects")).rows.length,
     0,
@@ -86,6 +98,11 @@ test("migração PostgreSQL: isolamento de dois usuários, Storage privado e tra
     (await db.query(`delete from fin_lancamentos returning id`)).rows.length,
     0,
   );
+  assert.equal(
+    (await db.query(`update tarefas set concluida=true, concluida_em=now() returning id`)).rows.length,
+    0,
+  );
+  assert.equal((await db.query(`delete from tarefas returning id`)).rows.length, 0);
   await assert.rejects(
     () =>
       db.exec(
@@ -113,6 +130,17 @@ test("migração PostgreSQL: isolamento de dois usuários, Storage privado e tra
         `insert into fin_lancamentos(descricao,tipo,status,valor,data_vencimento) values ('inválido','entrada','realizado',10,current_date)`,
       ),
     /realizacao_consistente/,
+  );
+  await assert.rejects(
+    () =>
+      db.exec(
+        `insert into tarefas(user_id,titulo) values ('11111111-1111-4111-8111-111111111111','forjada')`,
+      ),
+    /row-level security/,
+  );
+  await assert.rejects(
+    () => db.exec(`insert into tarefas(titulo,concluida) values ('inválida',true)`),
+    /conclusao_consistente/,
   );
   await db.close();
 });

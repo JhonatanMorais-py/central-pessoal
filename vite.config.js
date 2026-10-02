@@ -36,6 +36,7 @@ function readBody(req) {
 function demoSupabase() {
   const ideas = [];
   const finances = [];
+  const tasks = [];
   const audios = new Map();
   return {
     name: "citracrm-demo",
@@ -130,6 +131,33 @@ function demoSupabase() {
                 b.created_at.localeCompare(a.created_at),
             ),
           );
+        }
+
+        if (path === "/rest/v1/tarefas") {
+          const id = url.searchParams.get("id")?.replace(/^eq\./, "");
+          if (req.method === "POST") {
+            const input = JSON.parse((await readBody(req)).toString() || "{}");
+            tasks.unshift({
+              id: input.id || crypto.randomUUID(),
+              ...input,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+            return json(res, null, 201);
+          }
+          if (req.method === "PATCH") {
+            const input = JSON.parse((await readBody(req)).toString() || "{}");
+            const row = tasks.find((item) => item.id === id);
+            if (row)
+              Object.assign(row, input, { updated_at: new Date().toISOString() });
+            return json(res, null);
+          }
+          if (req.method === "DELETE") {
+            const index = tasks.findIndex((item) => item.id === id);
+            if (index >= 0) tasks.splice(index, 1);
+            return json(res, null);
+          }
+          return json(res, tasks);
         }
 
         if (path.startsWith("/storage/v1/object/sign/audios/")) {

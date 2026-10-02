@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f6f5f1" />
-    <meta name="description" content="CitraCRM — ideias e finanças organizadas em um só lugar." />
+    <meta name="description" content="CitraCRM — ideias, finanças e tarefas organizadas em um só lugar." />
     <title>CitraCRM</title>
   </head>
   <body>
@@ -15,9 +15,11 @@
         <nav class="module-nav" aria-label="Módulos">
           <button class="module-link active" data-view="ideas" type="button"><span class="ui-icon icon-ideas" aria-hidden="true"></span><strong>Ideias</strong><span id="idea-count" class="count">0</span></button>
           <button class="module-link" data-view="finance" type="button"><span class="ui-icon icon-finance" aria-hidden="true"></span><strong>Financeiro</strong><span id="finance-count" class="count">0</span></button>
+          <button class="module-link" data-view="tasks" type="button"><span class="ui-icon icon-tasks" aria-hidden="true"></span><strong>Tarefas</strong><span id="task-count" class="count">0</span></button>
         </nav>
         <button class="new-button" id="new-idea" type="button"><span class="ui-icon icon-plus" aria-hidden="true"></span><span>Nova ideia</span><kbd>N</kbd></button>
         <button class="new-button" id="new-finance" type="button" hidden><span class="ui-icon icon-plus" aria-hidden="true"></span><span>Novo lançamento</span><kbd>N</kbd></button>
+        <button class="new-button" id="new-task" type="button" hidden><span class="ui-icon icon-plus" aria-hidden="true"></span><span>Nova tarefa</span><kbd>N</kbd></button>
         <div class="sidebar-note"><span class="note-mark" aria-hidden="true"></span><p id="sidebar-quote">Uma ideia não precisa estar pronta para ser boa.</p><small id="sidebar-quote-detail">Comece pelo que está na sua cabeça.</small></div>
         <div class="account"><span class="avatar">EU</span><div><strong>Meu espaço pessoal</strong><small id="account-email">Acesso privado</small></div><button id="logout" class="logout-button" aria-label="Sair" hidden>Sair</button></div>
       </aside>
@@ -26,7 +28,7 @@
         <section class="page-heading"><div><p class="eyebrow" id="heading-eyebrow">CAPTURE. ORGANIZE. CRIE.</p><h1 id="heading-title">Dê espaço às suas ideias<span>.</span></h1><p id="heading-subtitle">Do pensamento solto ao próximo projeto. Uma ideia de cada vez.</p></div><span class="heading-art ideas" id="heading-art" aria-hidden="true"></span></section>
         <div id="notice" role="status" aria-live="polite" hidden></div>
         <section id="setup" class="panel" hidden><h2>Seu espaço está quase pronto</h2><p>Configure a URL e a chave pública do Supabase no arquivo <code>.env</code>.</p><p>O passo a passo está no README do projeto.</p></section>
-        <section id="login-panel" class="panel login-panel" hidden><span class="small-icon"><span class="ui-icon icon-login" aria-hidden="true"></span></span><h2>Seu espaço começa aqui.</h2><p>Entre para acessar suas ideias e finanças.</p><form id="login-form"><label>E-mail<input id="email" type="email" autocomplete="username" required placeholder="voce@exemplo.com" /></label><label>Senha<input id="password" type="password" autocomplete="current-password" required minlength="6" placeholder="Sua senha" /></label><button class="primary" type="submit">Entrar no meu espaço</button></form><small>Acesso exclusivo. O usuário é criado pelo administrador.</small></section>
+        <section id="login-panel" class="panel login-panel" hidden><span class="small-icon"><span class="ui-icon icon-login" aria-hidden="true"></span></span><h2>Seu espaço começa aqui.</h2><p>Entre para acessar suas ideias, finanças e tarefas.</p><form id="login-form"><label>E-mail<input id="email" type="email" autocomplete="username" required placeholder="voce@exemplo.com" /></label><label>Senha<input id="password" type="password" autocomplete="current-password" required minlength="6" placeholder="Sua senha" /></label><button class="primary" type="submit">Entrar no meu espaço</button></form><small>Acesso exclusivo. O usuário é criado pelo administrador.</small></section>
         <section id="workspace" hidden>
           <section id="ideas-workspace">
             <div class="history-heading"><h2>Suas ideias <span id="history-count">0</span></h2><span>Um lugar para não esquecer</span></div>
@@ -53,6 +55,14 @@
               <div id="finance-list" aria-live="polite"></div>
             </section>
           </section>
+          <section id="tasks-workspace" hidden>
+            <div class="task-actions"><div><h2>Suas tarefas</h2><p>Acompanhe o que precisa ser feito e o que já foi concluído.</p></div><button class="primary" id="task-add-top" type="button"><span class="ui-icon icon-plus" aria-hidden="true"></span>Nova tarefa</button></div>
+            <div class="task-summary" aria-label="Resumo das tarefas"><article><small>PENDENTES</small><strong id="task-pending">0</strong></article><article><small>CONCLUÍDAS</small><strong id="task-completed">0</strong></article><article><small>ATRASADAS</small><strong id="task-overdue">0</strong></article></div>
+            <section class="task-panel">
+              <div class="task-panel-head"><div><h2>Lista de tarefas</h2><span id="task-list-count">0 tarefas</span></div><div class="task-filters"><label><span class="sr-only">Buscar tarefa</span><input id="task-search" type="search" placeholder="Buscar tarefa…" /></label><label><span class="sr-only">Filtrar tarefas</span><select id="task-status-filter"><option value="">Todas</option><option value="pending">Pendentes</option><option value="completed">Concluídas</option></select></label></div></div>
+              <div id="task-list" aria-live="polite"></div>
+            </section>
+          </section>
           <footer id="workspace-footer">Da sua cabeça para o mundo.</footer>
         </section>
       </main>
@@ -66,6 +76,13 @@
       <label class="field field-wide">Categoria<input id="finance-category" maxlength="80" placeholder="Ex.: Clientes, aluguel, ferramentas" /></label><label class="field field-wide">Observações<textarea id="finance-notes" maxlength="1000" rows="3" placeholder="Informações adicionais (opcional)"></textarea></label>
     </div><div class="dialog-actions"><button type="button" id="finance-cancel" class="secondary">Cancelar</button><button class="primary" type="submit">Salvar lançamento</button></div></form></dialog>
     <dialog id="finance-delete-dialog"><h2>Excluir este lançamento?</h2><p>O registro financeiro será removido permanentemente.</p><div class="actions"><button id="finance-delete-cancel" class="secondary">Manter lançamento</button><button id="finance-delete-confirm" class="danger">Excluir lançamento</button></div></dialog>
+    <dialog id="task-dialog" class="task-dialog"><form id="task-form"><div class="dialog-heading"><div><p class="eyebrow">TAREFAS</p><h2 id="task-dialog-title">Nova tarefa</h2></div><button type="button" id="task-close" class="close-button" aria-label="Fechar"><span class="ui-icon icon-close" aria-hidden="true"></span></button></div><input type="hidden" id="task-id" /><div class="task-form-grid">
+      <label class="field">Título<input id="task-title" maxlength="180" required placeholder="Ex.: Enviar proposta" /></label>
+      <label class="field">Prazo<input id="task-due-date" type="date" /></label>
+      <label class="field">Descrição<textarea id="task-description" maxlength="1000" rows="4" placeholder="Detalhes da tarefa (opcional)"></textarea></label>
+      <label class="task-completed-field"><input id="task-is-completed" type="checkbox" /><span>Marcar como concluída</span></label>
+    </div><div class="dialog-actions"><button type="button" id="task-cancel" class="secondary">Cancelar</button><button class="primary" type="submit">Salvar tarefa</button></div></form></dialog>
+    <dialog id="task-delete-dialog"><h2>Excluir esta tarefa?</h2><p>A tarefa será removida permanentemente.</p><div class="actions"><button id="task-delete-cancel" class="secondary">Manter tarefa</button><button id="task-delete-confirm" class="danger">Excluir tarefa</button></div></dialog>
     <script type="module" src="/src/app.js"></script>
   </body>
 </html>
